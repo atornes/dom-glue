@@ -1,0 +1,19 @@
+{
+  "name": "dom-glue",
+  "version": "0.0.1",
+  "description": "Library to simplify binding between DOM elements and View Model and to listen to events.",
+  "main": "dom-glue.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atornes/dom-glue.git"
+  },
+  "author": "Anders Tornes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/atornes/dom-glue/issues"
+  },
+  "homepage": "https://github.com/atornes/dom-glue#readme"
+}
