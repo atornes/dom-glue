@@ -1,57 +1,63 @@
+'use strict';
 
-((w,d) => {
-    
+class DomGlue {
+    constructor(model, config, doc = window.document) {
 
-    w.DomGlue = {
-        glue: (model, config) => {
+        let scope = config.events.scope ? 
+                doc.querySelector(config.events.scope) : doc;
 
-            let scope = config.events.scope ? 
-                    d.querySelector(config.events.scope) : d;
-
-            if (config.events) {
-                config.events.forEach(event => {
-                    let element = scope.querySelector(event[0]);
-                    element.addEventListener(event[1], ev => {
-                        ev.preventDefault();
-                        event[2](model, ev);
-                        console.log(model);
-                    });
-                });
-            }
-
-            if (config.toDom) {
-                model = Object.deepObserve(model, changeset => {
-                    console.log("Change: ", changeset);
-                    changeset.forEach(change => {
-                        let mathedToDoms = config.toDom.filter(td => td[2] === change.keypath);
-                        mathedToDoms.forEach(td => {
-                            let element = scope.querySelector(td[0]);
-                            element[td[1]] = change.newValue;
-                        });
-                    });
-                });
-            }
-
-            if (config.toModel) {
-                var observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        console.log(mutation.type);
-                    });    
-                });
-
-                // configuration of the observer:
-                var obsConfig = { attributes: true, childList: true, characterData: true };
- 
-                config.toModel.forEach(tm => {
-                    let el = scope.querySelector(tm[0]);
-                    el = Object.deepObserve(el, changeset => {
-                        console.log(changeset);
-                    });
-                    //observer.observe(el, obsConfig);
-                });
-
-                
-            }
+        if (config.events) {
+            this.attachEvents(config.events, model, scope);
         }
-    };
-})(window,window.document);
+
+        if (config.bind) {
+            this.createBindings(config.bind, model, scope);
+            this.initBoundElements(config.bind, model, scope);
+        }
+    }
+
+    attachEvents(events, model, scope) {
+        events.forEach(event => {
+            let element = scope.querySelector(event[0]);
+            element.addEventListener(event[1], ev => {
+                ev.preventDefault();
+                console.info("Event fired: ", ev);
+                event[2](ev, model);
+            });
+        });
+    }
+
+    createBindings(bindings, model, scope) {
+        model = Object.deepObserve(model, changeset => {
+            changeset.forEach(change => {
+                let matchedBinds = bindings.filter(td => td[2] === change.keypath);
+                matchedBinds.forEach(td => {
+                    let element = scope.querySelector(td[0]);
+                    element[td[1]] = change.newValue;
+                });
+            });
+
+            console.info("Model changed: ", model);
+        });
+    }
+
+    initBoundElements(bindings, model, scope){
+        bindings.forEach(binding => {
+            let elements = scope.querySelectorAll(binding[0]);
+            elements.forEach(el => {
+                el[binding[1]] = this.resolve(model, binding[2]);
+            });
+        });
+    }
+
+    resolve(obj, path) {
+        
+        let r=path.split(".");
+        
+        if (path) {
+            return this.resolve(obj[r.shift()], r.join("."));
+        }
+
+        return obj
+    }
+}

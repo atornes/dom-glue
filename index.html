@@ -6,8 +6,26 @@
         <title>DOM Glue test</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="text/javascript" src="proxy-observe.js"></script>
     </head>
-    <body>
-        <h1>test</h1>
+    <body id="parent">
+        <h1 id="head1">Bound element</h1>
+        <input type="text" id="input1" placeholder="Type here"/>
+        <button id="button1">Click me</button>
     </body>
+    <script type="text/javascript" src="/dom-glue.js"></script>
+    <script>
+        let theModel = { text1: 'Init', deep:{deep2:{deep3:"Bound from model"}} };
+
+        let domGlue = new DomGlue(theModel, {
+            scope: "#parent",
+            bind: [
+                ["#head1", "textContent", "deep.deep2.deep3"]
+            ],
+            events: [
+                ["#button1", "click", (event, model) => model.deep.deep2.deep3 = "Button clicked" + new Date().getMilliseconds()],
+                ["#input1", "keyup", (event, model) => model.deep.deep2.deep3 = event.target.value]
+            ]
+        });
+    </script>
 </html>
