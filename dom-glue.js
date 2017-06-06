@@ -1,6 +1,6 @@
 'use strict';
 
-export class DomGlue {
+class DomGlue {
     constructor(model, config, doc = window.document) {
         this._model = model;
 
