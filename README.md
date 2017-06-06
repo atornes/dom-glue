@@ -6,9 +6,9 @@ Very simple library to simplify two tasks.
 Warning: Very alpha, not well tested and many features are missing.
 
 ## Dependencies
-proxy-observe https://github.com/anywhichway/proxy-observe
-Proxy interface should be supported in browser
-ES2015, 2016, 2017 features are used without consideration. 
+proxy-observe https://github.com/anywhichway/proxy-observe  
+Proxy interface should be supported in browser  
+ES2015, 2016, 2017 features are used without consideration.   
 
 ## Basic usage
 ```html
