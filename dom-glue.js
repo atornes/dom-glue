@@ -1,63 +1,89 @@
 'use strict';
 
-class DomGlue {
+export class DomGlue {
     constructor(model, config, doc = window.document) {
+        this._model = model;
 
-        let scope = config.events.scope ? 
+        this._scope = config.events.scope ? 
                 doc.querySelector(config.events.scope) : doc;
 
-        if (config.events) {
-            this.attachEvents(config.events, model, scope);
+        this._config = config;
+
+        if (this._config.events) {
+            this._initEvents();
         }
 
-        if (config.bind) {
-            this.createBindings(config.bind, model, scope);
-            this.initBoundElements(config.bind, model, scope);
+        if (this._config.bind) {
+            this._initBindings();
+            this._initBoundElements();
         }
     }
 
-    attachEvents(events, model, scope) {
-        events.forEach(event => {
-            let element = scope.querySelector(event[0]);
-            element.addEventListener(event[1], ev => {
-                ev.preventDefault();
-                console.info("Event fired: ", ev);
-                event[2](ev, model);
+    _initEvents() {
+        this._config.events.forEach(event => {
+
+            let [selector, eventkeys, callback, preventDefault = true] = event;
+
+            this.attachEventListeners(selector, eventkeys, callback, preventDefault);
+        });
+    }
+
+    /*
+    Attach event listener(s) for supplied element or a selector
+     */
+    attachEventListeners(elementOrSelector, eventkeys, callback, preventDefault = true) {
+        let elements;
+
+        if (elementOrSelector instanceof HTMLElement) {
+            elements = [elementOrSelector];
+        }
+        else if (typeof elementOrSelector === "string") {
+            elements = this._scope.querySelectorAll(elementOrSelector);
+        }
+
+        eventkeys.split(" ").forEach(eventKey => { 
+            elements.forEach(element => {
+                element.addEventListener(eventKey, ev => {
+                    if (preventDefault) {
+                        ev.preventDefault();
+                    }
+                    console.info("Event fired: ", ev);
+                    callback(ev, this._model);
+                });
             });
         });
     }
 
-    createBindings(bindings, model, scope) {
-        model = Object.deepObserve(model, changeset => {
+    _initBindings() {
+        this._model = Object.deepObserve(this._model, changeset => {
             changeset.forEach(change => {
-                let matchedBinds = bindings.filter(td => td[2] === change.keypath);
+                let matchedBinds = this._config.bind.filter(td => td[2] === change.keypath);
                 matchedBinds.forEach(td => {
-                    let element = scope.querySelector(td[0]);
-                    element[td[1]] = change.newValue;
+                    let elements = this._scope.querySelectorAll(td[0]);
+                    elements.forEach(element => 
+                        element[td[1]] = change.newValue
+                    );
                 });
             });
 
-            console.info("Model changed: ", model);
+            console.info("Model changed: ", this._model);
         });
     }
 
-    initBoundElements(bindings, model, scope){
-        bindings.forEach(binding => {
-            let elements = scope.querySelectorAll(binding[0]);
+    _initBoundElements(){
+        this._config.bind.forEach(binding => {
+            let elements = this._scope.querySelectorAll(binding[0]);
             elements.forEach(el => {
-                el[binding[1]] = this.resolve(model, binding[2]);
+                el[binding[1]] = this._resolveKeypath(this._model, binding[2]);
             });
         });
     }
 
-    resolve(obj, path) {
-        
+    _resolveKeypath(obj, path) {
         let r=path.split(".");
-        
         if (path) {
-            return this.resolve(obj[r.shift()], r.join("."));
+            return this._resolveKeypath(obj[r.shift()], r.join("."));
         }
-
         return obj
     }
 }

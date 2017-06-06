@@ -15,17 +15,20 @@
     </body>
     <script type="text/javascript" src="/dom-glue.js"></script>
     <script>
-        let theModel = { text1: 'Init', deep:{deep2:{deep3:"Bound from model"}} };
-
-        let domGlue = new DomGlue(theModel, {
+        let theModel = { deep:{deep2:{deep3:"Bound from model"}} };
+        
+        let config = {
             scope: "#parent",
             bind: [
-                ["#head1", "textContent", "deep.deep2.deep3"]
+                ["#head1", "textContent", "deep.deep2.deep3"],
+                ["#input1", "value", "deep.deep2.deep3"]
             ],
             events: [
                 ["#button1", "click", (event, model) => model.deep.deep2.deep3 = "Button clicked" + new Date().getMilliseconds()],
-                ["#input1", "keyup", (event, model) => model.deep.deep2.deep3 = event.target.value]
+                ["#input1", "keyup blur", (event, model) => model.deep.deep2.deep3 = event.target.value]
             ]
-        });
+        };
+
+        let domGlue = new DomGlue(theModel, config);
     </script>
 </html>
